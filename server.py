@@ -1,8 +1,7 @@
 from flask import Flask, render_template, redirect, request, url_for
 import csv
 import smtplib
-
-
+from email.message import EmailMessage
 
 app = Flask(__name__)
 
@@ -31,17 +30,17 @@ def csv_file_writer(data):
         csv_writer.writerow([email,subject,message])
         
 def send_email(data):
-    sender = "<l3shi@uwaterloo.ca>"
-    receiver = "<dunyueshi@gmail.com>"
-    message = f"""\
-    Subject: Hi Mailtrap
-    To: {receiver}
-    From: {sender}
-
-    This is a test e-mail message."""
-    with smtplib.SMTP("sandbox.smtp.mailtrap.io", 2525) as server:
-        server.login("abc36d454627eb", "3d1aacd2570a65")
-        server.sendmail(sender, receiver, message)
+    email = EmailMessage()
+    email['from'] = data["email"]
+    email['to'] = 'l3shi@uwaterloo.ca'
+    email['subject'] = data["subject"]
+    email.set_content(data["message"])
+    with smtplib.SMTP(host='smtp.gmail.com', port=587) as smtp:
+        smtp.ehlo()
+        smtp.starttls()
+        smtp.login('dunyueshi@gmail.com', 'acsedmadcpdeyhyu')
+        smtp.send_message(email)
+        
         
 @app.route('/submit_form', methods=['POST', 'GET'])
 def submit_form():
@@ -52,6 +51,6 @@ def submit_form():
             send_email(data)
             return redirect('/thankyou.html')
         except:
-            return 'did not save to the database'
+            return redirect('/error.html')
     else:
         return 'something wrong'
